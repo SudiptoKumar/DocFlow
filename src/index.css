@@ -1,0 +1,646 @@
+/* Fonts loaded non-render-blocking via index.html preload + JS injection */
+
+/* SolaimanLipi webfont (absolute URLs to avoid build-time @import rewriting issues) */
+@font-face {
+  font-family: 'SolaimanLipi';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 700;
+  src: url('https://fonts.maateen.me/solaiman-lipi/solaimanlipi-bold-v1.0.woff2') format('woff2'),
+    url('https://fonts.maateen.me/solaiman-lipi/solaimanlipi-bold-v1.0.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'SolaimanLipi';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 400;
+  src: url('https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.woff2') format('woff2'),
+    url('https://fonts.maateen.me/solaiman-lipi/solaimanlipi-normal-v1.0.ttf') format('truetype');
+}
+
+@font-face {
+  font-family: 'SolaimanLipi';
+  font-display: swap;
+  font-style: normal;
+  font-weight: 100;
+  src: url('https://fonts.maateen.me/solaiman-lipi/solaimanlipi-thin-v1.0.woff2') format('woff2'),
+    url('https://fonts.maateen.me/solaiman-lipi/solaimanlipi-thin-v1.0.ttf') format('truetype');
+}
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Clean white study theme */
+    --background: 0 0% 100%;
+    --foreground: 220 20% 20%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 20% 20%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 20% 20%;
+
+    /* Vibrant study green accent */
+    --primary: 152 76% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 45 100% 96%;
+    --secondary-foreground: 220 20% 20%;
+
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 10% 50%;
+
+    --accent: 262 83% 58%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 152 76% 45%;
+
+    --radius: 1rem;
+
+    /* Custom study tokens */
+    --study-green: 152 76% 45%;
+    --study-blue: 217 91% 60%;
+    --study-purple: 262 83% 58%;
+    --study-orange: 25 95% 53%;
+    --study-pink: 330 81% 60%;
+    --study-yellow: 45 93% 58%;
+    
+    --success: 152 76% 45%;
+    --warning: 45 93% 58%;
+    
+    /* Editor specific - light study mode */
+    --editor-bg: 45 100% 98%;
+    --editor-gutter: 45 50% 96%;
+    --editor-line-active: 45 50% 95%;
+    --preview-bg: 0 0% 100%;
+    
+    /* Soft shadows for depth */
+    --shadow-soft: 0 2px 8px -2px hsl(220 20% 20% / 0.08);
+    --shadow-medium: 0 4px 16px -4px hsl(220 20% 20% / 0.12);
+    --shadow-large: 0 8px 32px -8px hsl(220 20% 20% / 0.15);
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 220 20% 20%;
+    --sidebar-primary: 152 76% 45%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 45 100% 96%;
+    --sidebar-accent-foreground: 220 20% 20%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 152 76% 45%;
+  }
+
+  .dark {
+    /* AMOLED dark theme - pure black with vibrant neon syntax accents */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 95%;
+
+    --card: 0 0% 4%;
+    --card-foreground: 0 0% 95%;
+
+    --popover: 0 0% 4%;
+    --popover-foreground: 0 0% 95%;
+
+    /* Vibrant teal/cyan primary accent */
+    --primary: 170 85% 42%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 0 0% 7%;
+    --secondary-foreground: 0 0% 95%;
+
+    --muted: 0 0% 6%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Purple accent */
+    --accent: 280 80% 60%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 350 80% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Subtle borders for AMOLED */
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 170 85% 42%;
+
+    /* Neon study tokens - vibrant against pure black */
+    --study-green: 170 85% 42%;
+    --study-pink: 330 85% 60%;
+    --study-purple: 280 80% 60%;
+    --study-orange: 35 95% 55%;
+    --study-yellow: 45 95% 60%;
+    --study-blue: 200 90% 55%;
+
+    /* Editor specific - AMOLED black */
+    --editor-bg: 0 0% 0%;
+    --editor-gutter: 0 0% 4%;
+    --editor-line-active: 0 0% 6%;
+    --preview-bg: 0 0% 0%;
+    
+    /* Neon shadows with cyan glow */
+    --shadow-soft: 0 2px 8px -2px hsl(180 50% 10% / 0.6);
+    --shadow-medium: 0 4px 16px -4px hsl(180 50% 10% / 0.7);
+    --shadow-large: 0 8px 32px -8px hsl(180 50% 10% / 0.8);
+    --shadow-glow: 0 0 20px hsl(170 85% 42% / 0.2);
+
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 170 85% 42%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 7%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 170 85% 42%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Plus Jakarta Sans', 'SolaimanLipi', system-ui, sans-serif;
+  }
+
+  /* Light scrollbar for study theme */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: hsl(var(--muted));
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.2);
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.35);
+  }
+}
+
+@layer components {
+  /* Soft card shadow */
+  .card-shadow {
+    box-shadow: var(--shadow-soft);
+  }
+
+  /* Colorful gradient text */
+  .text-gradient {
+    background: linear-gradient(135deg, hsl(var(--study-green)), hsl(var(--study-blue)));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* Editor styles - warm paper feel */
+  .editor-container {
+    background: hsl(var(--editor-bg));
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* Preview styles */
+  .preview-container {
+    background: hsl(var(--preview-bg));
+  }
+
+  /* Markdown preview typography - matching PDF export style */
+  .markdown-preview {
+    @apply text-foreground leading-relaxed;
+    font-family: 'Plus Jakarta Sans', 'SolaimanLipi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  }
+
+  /* Explicit Bengali font class for targeted use */
+  .font-bengali {
+    font-family: 'SolaimanLipi', 'Times New Roman', serif;
+  }
+
+  .markdown-preview h1 {
+    @apply text-3xl font-bold mt-6 mb-4 text-foreground border-b border-border pb-2;
+  }
+
+  .markdown-preview h2 {
+    @apply text-2xl font-semibold mt-5 mb-3 text-foreground border-b border-border pb-2;
+  }
+
+  .markdown-preview h3 {
+    @apply text-xl font-semibold mt-4 mb-2 text-foreground;
+  }
+
+  .markdown-preview h4 {
+    @apply text-lg font-medium mt-3 mb-2 text-foreground;
+  }
+
+  .markdown-preview p {
+    @apply my-3 text-foreground;
+  }
+
+  .markdown-preview ul,
+  .markdown-preview ol {
+    @apply my-3 pl-6;
+  }
+
+  .markdown-preview ul {
+    @apply list-disc;
+  }
+
+  .markdown-preview ol {
+    @apply list-decimal;
+  }
+
+  .markdown-preview li {
+    @apply my-1 text-foreground;
+  }
+
+  .markdown-preview code {
+    @apply px-1.5 py-0.5 rounded text-sm bg-muted text-primary font-mono;
+  }
+
+  .markdown-preview pre {
+    @apply my-4 p-4 rounded-lg bg-muted overflow-x-auto;
+  }
+
+  .markdown-preview pre code {
+    @apply p-0 bg-transparent text-foreground;
+  }
+
+  .markdown-preview blockquote {
+    @apply my-4 pl-4 border-l-4 border-primary/50 text-muted-foreground italic;
+  }
+
+  .markdown-preview table {
+    @apply my-4 w-full border-collapse;
+  }
+
+  .markdown-preview th,
+  .markdown-preview td {
+    @apply border border-border px-3 py-2 text-left;
+  }
+
+  .markdown-preview th {
+    @apply bg-muted font-semibold;
+  }
+
+  .markdown-preview a {
+    @apply text-primary underline underline-offset-2 hover:text-primary/80 transition-colors;
+  }
+
+  .markdown-preview hr {
+    @apply my-6 border-border;
+  }
+
+  .markdown-preview img {
+    @apply max-w-full h-auto rounded-lg my-4;
+  }
+
+  /* LaTeX Math Display Styles */
+  .markdown-preview .math-display {
+    display: block;
+    text-align: center;
+    margin: 1.5em 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+  }
+
+  .markdown-preview .math-inline {
+    display: inline;
+  }
+
+  .markdown-preview .math-error {
+    color: hsl(var(--destructive));
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .markdown-preview .katex {
+    font-size: 1.1em;
+  }
+
+  .markdown-preview .katex-display {
+    margin: 0.5em 0;
+  }
+
+  /* Task list checkbox styles */
+  .markdown-preview .task-list-item {
+    list-style: none;
+    position: relative;
+    margin-left: -1.5em;
+  }
+
+  .markdown-preview .task-list-checkbox {
+    @apply mr-2 h-4 w-4 rounded border-border accent-primary;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  /* Code syntax highlighting overrides */
+  .markdown-preview pre code.hljs {
+    @apply bg-transparent p-0;
+  }
+
+  /* Mark / Highlight */
+  .markdown-preview mark {
+    background: #fef08a;
+    padding: 0.1em 0.2em;
+    border-radius: 0.2em;
+  }
+
+  /* Footnote styles */
+  .markdown-preview .footnotes {
+    border-top: 1px solid hsl(var(--border));
+    margin-top: 2em;
+    padding-top: 1em;
+    font-size: 0.875em;
+  }
+  .markdown-preview sup.footnote-ref a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+  }
+
+  /* TOC styles */
+  .markdown-preview .table-of-contents {
+    background: hsl(var(--muted));
+    padding: 1em 1.5em;
+    border-radius: 0.75em;
+    margin: 1em 0;
+  }
+  .markdown-preview .table-of-contents ul {
+    list-style: none;
+    padding-left: 1em;
+  }
+  .markdown-preview .table-of-contents a {
+    color: hsl(var(--primary));
+    text-decoration: none;
+  }
+  .markdown-preview .table-of-contents a:hover {
+    text-decoration: underline;
+  }
+
+  /* Admonition / Callout boxes */
+  .markdown-preview .admonition {
+    margin: 1em 0;
+    padding: 1em 1em 1em 1.25em;
+    border-left: 4px solid;
+    border-radius: 0.5em;
+  }
+  .markdown-preview .admonition-title {
+    font-weight: 700;
+    margin-bottom: 0.25em;
+  }
+  .markdown-preview .admonition-info {
+    border-color: #3b82f6;
+    background: #eff6ff;
+  }
+  .markdown-preview .admonition-warning {
+    border-color: #f59e0b;
+    background: #fffbeb;
+  }
+  .markdown-preview .admonition-success {
+    border-color: #10b981;
+    background: #ecfdf5;
+  }
+  .markdown-preview .admonition-tip {
+    border-color: #8b5cf6;
+    background: #f5f3ff;
+  }
+  .markdown-preview .admonition-danger {
+    border-color: #ef4444;
+    background: #fef2f2;
+  }
+}
+
+  /* Mermaid diagram styles */
+  .markdown-preview .mermaid {
+    margin: 1.5em 0;
+    text-align: center;
+    overflow-x: auto;
+  }
+  .markdown-preview .mermaid svg {
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* Function plot styles */
+  .markdown-preview .function-plot {
+    margin: 1.5em auto;
+    max-width: 500px;
+  }
+  .markdown-preview .function-plot svg {
+    max-width: 100%;
+  }
+
+  /* Reading highlight for read-aloud */
+  .reading-highlight {
+    background: rgba(59, 130, 246, 0.15) !important;
+    border-radius: 0.2em;
+    transition: background 0.3s ease;
+  }
+  .dark .reading-highlight {
+    background: rgba(59, 130, 246, 0.25) !important;
+  }
+
+/* Dark mode mark */
+.dark .markdown-preview mark {
+  background: rgba(250, 204, 21, 0.3);
+  color: #fef9c3;
+}
+
+/* Dark mode admonitions */
+.dark .markdown-preview .admonition-info { background: rgba(59, 130, 246, 0.1); }
+.dark .markdown-preview .admonition-warning { background: rgba(245, 158, 11, 0.1); }
+.dark .markdown-preview .admonition-success { background: rgba(16, 185, 129, 0.1); }
+.dark .markdown-preview .admonition-tip { background: rgba(139, 92, 246, 0.1); }
+.dark .markdown-preview .admonition-danger { background: rgba(239, 68, 68, 0.1); }
+
+@layer utilities {
+  /* Colorful highlight animations */
+  .animate-highlight {
+    animation: highlight 3s ease-in-out infinite;
+  }
+
+  @keyframes highlight {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
+  .animate-pulse-subtle {
+    animation: pulse-subtle 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-subtle {
+    0%, 100% {
+      opacity: 1;
+    }
+    50% {
+      opacity: 0.7;
+    }
+  }
+
+  /* Safe area for mobile bottom bar */
+  .safe-bottom {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Light glassmorphism for study theme */
+  .glass {
+    background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(0, 0, 0, 0.05);
+  }
+
+  .dark .glass {
+    background: rgba(0, 0, 0, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(40, 180, 170, 0.25);
+    box-shadow: 0 0 15px rgba(40, 180, 170, 0.08);
+  }
+
+  .glass-colored {
+    background: rgba(255, 255, 255, 0.9);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(0, 0, 0, 0.08);
+    box-shadow: var(--shadow-soft);
+  }
+
+  .dark .glass-colored {
+    background: rgba(0, 0, 0, 0.95);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid rgba(40, 180, 170, 0.3);
+    box-shadow: 0 0 20px rgba(40, 180, 170, 0.1);
+  }
+
+  /* Study-themed colored borders */
+  .border-study-green {
+    border-color: hsl(var(--study-green) / 0.3);
+  }
+
+  .border-study-blue {
+    border-color: hsl(var(--study-blue) / 0.3);
+  }
+
+  .border-study-purple {
+    border-color: hsl(var(--study-purple) / 0.3);
+  }
+}
+
+/* Dark mode markdown syntax highlighting */
+.dark .markdown-preview h1,
+.dark .markdown-preview h2 {
+  color: hsl(330 85% 60%);
+  border-color: hsl(330 85% 60% / 0.3);
+}
+
+.dark .markdown-preview h3,
+.dark .markdown-preview h4 {
+  color: hsl(280 80% 65%);
+}
+
+.dark .markdown-preview strong {
+  color: hsl(45 95% 60%);
+}
+
+.dark .markdown-preview code {
+  background: hsl(0 0% 8%);
+  color: hsl(175 80% 55%);
+}
+
+.dark .markdown-preview pre {
+  background: hsl(0 0% 5%);
+  border: 1px solid hsl(0 0% 15%);
+}
+
+.dark .markdown-preview blockquote {
+  border-color: hsl(280 80% 55%);
+  color: hsl(215 20% 65%);
+}
+
+.dark .markdown-preview a {
+  color: hsl(175 80% 55%);
+}
+
+.dark .markdown-preview ol > li::marker {
+  color: hsl(45 95% 60%);
+}
+
+/* ===== Print-Optimized CSS ===== */
+@media print {
+  @page {
+    size: A4;
+    margin: 12.7mm;
+  }
+  body {
+    font-family: 'Times New Roman', 'SolaimanLipi', serif !important;
+    font-size: 12pt !important;
+    line-height: 1.5 !important;
+    color: #000 !important;
+    background: #fff !important;
+  }
+  /* Hide all UI chrome */
+  header, nav, .floating-toolbar, .mobile-action-bar, .desktop-action-buttons,
+  .status-bar, .editor-stats-bar, .mode-switch, .zen-mode-button,
+  button[class*="action"], .tabs-list,
+  [class*="FloatingToolbar"], [class*="MobileActionBar"], [class*="DesktopAction"],
+  [class*="MobileHeader"], [class*="StatusBar"], [class*="EditorStatsBar"],
+  [class*="LaTeXToolbar"], [class*="FileUpload"], [class*="ActionCard"] {
+    display: none !important;
+  }
+  /* Show only preview content */
+  .markdown-preview {
+    max-width: 100% !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+  /* Page break controls */
+  h1, h2, h3, h4 {
+    page-break-after: avoid;
+  }
+  pre, table, blockquote, .admonition, figure {
+    page-break-inside: avoid;
+  }
+  img {
+    max-width: 100%;
+    page-break-inside: avoid;
+  }
+  a {
+    color: #000 !important;
+    text-decoration: underline !important;
+  }
+  /* Justified text for academic look */
+  p {
+    text-align: justify;
+    orphans: 3;
+    widows: 3;
+  }
+}
