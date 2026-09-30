@@ -304,7 +304,17 @@ The current browser Markdown PDF export does not call this function. It uses the
 
 No `.github/workflows/` directory is present in the repository, so no GitHub Actions workflow is currently defined.
 
-The frontend is a standard Vite application and can be deployed to a static hosting provider that supports Vite builds. The project itself does not contain provider-specific deployment scripts or configuration beyond the included Vite build configuration.
+The frontend is a standard Vite application with provider-specific deployment configuration included for both Netlify and Vercel. The application uses `BrowserRouter`, so both providers are configured with an SPA fallback to `index.html`.
+
+### Netlify
+
+`netlify.toml` defines the production build command (`npm run build`), publish directory (`dist`), Node 22, and the SPA fallback. `public/_redirects` is also included as a second fallback mechanism in the generated site.
+
+### Vercel
+
+`vercel.json` defines the Vite framework, production build command, `dist` output directory, `npm ci` install command, SPA fallback rewrite, and immutable caching for generated assets.
+
+Both deployment packages include `.nvmrc` and pin the Node major version to 22.
 
 ## Testing and validation
 
