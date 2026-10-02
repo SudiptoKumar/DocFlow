@@ -11,6 +11,7 @@ on:
 
 permissions:
   contents: write
+  actions: write   # needed to delete old workflow runs
 
 # Only one import at a time. A second upload waits for the first one.
 concurrency:
@@ -313,3 +314,38 @@ jobs:
           git push origin HEAD:main
 
           echo "Import finished and pushed to main."
+
+      # ==================================================
+      # CLEAN OLD ACTION RUN HISTORY
+      # Runs only after a successful import and push.
+      # Deletes all finished runs of every workflow.
+      # The current run stays (a running job cannot delete itself).
+      # A problem here never undoes the import.
+      # ==================================================
+      - name: Delete old workflow runs
+        if: steps.find.outputs.found == 'true'
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+
+          IDS="$(gh api --paginate \
+            "repos/$GITHUB_REPOSITORY/actions/runs?per_page=100&status=completed" \
+            --jq '.workflow_runs[].id')"
+
+          DELETED=0
+          FAILED=0
+
+          for id in $IDS; do
+            if [ "$id" = "$GITHUB_RUN_ID" ]; then
+              continue
+            fi
+            if gh api -X DELETE "repos/$GITHUB_REPOSITORY/actions/runs/$id" > /dev/null 2>&1; then
+              DELETED=$((DELETED + 1))
+            else
+              FAILED=$((FAILED + 1))
+            fi
+          done
+
+          echo "Deleted $DELETED old runs. Could not delete $FAILED."
