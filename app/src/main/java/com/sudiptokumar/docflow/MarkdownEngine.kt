@@ -1,7 +1,5 @@
 package com.sudiptokumar.docflow
 
-import android.text.TextUtils
-
 object MarkdownEngine {
     fun normalize(input: String): String {
         var s = input.replace("\r\n", "\n").replace('\r', '\n')
@@ -157,6 +155,11 @@ object MarkdownEngine {
         return s.replace("  ", "<br>")
     }
 
-    private fun escape(s: String): String = TextUtils.htmlEncode(s)
+    private fun escape(s: String): String = s
+        .replace("&", "&amp;")
+        .replace("<", "&lt;")
+        .replace(">", "&gt;")
+        .replace("\"", "&quot;")
+        .replace("'", "&#39;")
     private fun escapeAttr(s: String): String = escape(s).replace("\"", "&quot;")
 }

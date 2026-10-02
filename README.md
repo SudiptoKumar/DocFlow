@@ -2,6 +2,8 @@
 
 Native Android/Kotlin + Jetpack Compose conversion of the supplied DocFlow web app.
 
+The project uses Android Gradle Plugin 9.4 with AGP's built-in Kotlin support. The separate `org.jetbrains.kotlin.android` plugin is intentionally not applied because AGP 9+ provides Kotlin natively.
+
 ## What is included
 
 - Native Kotlin + Jetpack Compose UI
@@ -53,7 +55,7 @@ app/build/outputs/apk/debug/app-debug.apk
 
 The repository contains `.github/workflows/build-apk.yml`.
 
-Every push/PR builds the debug APK and uploads it as a workflow artifact. A tag such as `v1.0.0` also creates a GitHub Release and attaches the debug APK.
+Every push/PR builds the debug APK, runs the unit tests, and uploads the APK as a workflow artifact. A tag such as `v1.0.0` also creates a GitHub Release and attaches the debug APK. The workflow uses current Node 24-compatible GitHub Actions versions.
 
 A production-signed release can be added later with `DOCFLOW_KEYSTORE_BASE64`, `DOCFLOW_KEYSTORE_PASSWORD`, and `DOCFLOW_KEY_ALIAS` GitHub secrets without changing the app source.
 
@@ -78,3 +80,9 @@ DocFlow/
 ├── settings.gradle.kts
 └── README.md
 ```
+
+## Build-fix notes
+
+The supplied CI log failed before compilation because AGP 9.4 already provides built-in Kotlin, while the module also applied `org.jetbrains.kotlin.android`. That duplicate Kotlin extension caused `Cannot add extension with name 'kotlin'`. The project is now migrated to AGP 9+ built-in Kotlin and keeps only the Compose compiler plugin.
+
+The Markdown engine also avoids Android framework-only helpers so its JVM unit tests can execute on GitHub Actions without Android “method not mocked” failures.
