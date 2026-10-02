@@ -1,0 +1,315 @@
+name: Import Project ZIP
+
+# Starts by itself when a ZIP file is pushed to the repository root on main.
+# No manual inputs. No GH_PAT needed (see notes below about .github/workflows).
+on:
+  push:
+    branches: [main]
+    paths:
+      - "*.zip"
+      - "*.ZIP"
+
+permissions:
+  contents: write
+
+# Only one import at a time. A second upload waits for the first one.
+concurrency:
+  group: import-project-zip
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  # Optional: files that must survive every import (space separated).
+  # Example: PRESERVE_FILES: "news_state.json posted_urls.txt"
+  PRESERVE_FILES: ""
+  # "true" only if you added a GH_PAT secret. Without it, GITHUB_TOKEN is used.
+  PAT_AVAILABLE: ${{ secrets.GH_PAT != '' }}
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+
+    steps:
+      # ==================================================
+      # CHECKOUT
+      # ==================================================
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT || github.token }}
+
+      # ==================================================
+      # 1 + 2. DETECT ZIP AND ALLOW ONLY ONE
+      # ==================================================
+      - name: Detect ZIP
+        id: find
+        run: |
+          set -euo pipefail
+
+          mapfile -t ZIPS < <(find . -maxdepth 1 -type f -iname "*.zip" | sort)
+
+          if [ "${#ZIPS[@]}" -eq 0 ]; then
+            echo "::notice::No ZIP file in repository root. Nothing to import."
+            echo "found=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [ "${#ZIPS[@]}" -gt 1 ]; then
+            echo "::error::Only one ZIP file is allowed in the repository root."
+            printf '%s\n' "${ZIPS[@]}"
+            exit 1
+          fi
+
+          echo "Found: ${ZIPS[0]}"
+          echo "found=true" >> "$GITHUB_OUTPUT"
+          echo "zip=${ZIPS[0]}" >> "$GITHUB_OUTPUT"
+
+      # ==================================================
+      # 3 + 4. VALIDATE ZIP (not corrupted, safe paths)
+      # ==================================================
+      - name: Validate ZIP
+        if: steps.find.outputs.found == 'true'
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          set -euo pipefail
+
+          if ! unzip -tq "$ZIP" > /dev/null; then
+            echo "::error::The ZIP file is corrupted or not a valid ZIP."
+            exit 1
+          fi
+
+          LIST="$(mktemp)"
+          unzip -Z1 "$ZIP" > "$LIST"
+
+          if [ ! -s "$LIST" ]; then
+            echo "::error::The ZIP file is empty."
+            exit 1
+          fi
+
+          # Reject: absolute paths, drive letters, backslashes, ".." parts.
+          if grep -qE '^/|^[A-Za-z]:|\\|(^|/)\.\.(/|$)' "$LIST"; then
+            echo "::error::Unsafe path found in ZIP (path traversal). Import stopped."
+            grep -nE '^/|^[A-Za-z]:|\\|(^|/)\.\.(/|$)' "$LIST" | head -20
+            exit 1
+          fi
+
+          echo "ZIP is valid and paths are safe."
+
+      # ==================================================
+      # 5. COPY ZIP TO TEMP + BACK UP IMPORTER WORKFLOW
+      # ==================================================
+      - name: Back up ZIP and importer workflow
+        if: steps.find.outputs.found == 'true'
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          set -euo pipefail
+
+          STAGE="$RUNNER_TEMP/zip-import"
+          rm -rf "$STAGE"
+          mkdir -p "$STAGE/workflows" "$STAGE/keep"
+
+          # ZIP copy
+          cp "$ZIP" "$STAGE/upload.zip"
+
+          # Path of the workflow that is running now
+          WF_PATH="${GITHUB_WORKFLOW_REF#"${GITHUB_REPOSITORY}/"}"
+          WF_PATH="${WF_PATH%%@*}"
+          echo "Importer workflow: $WF_PATH"
+
+          if [ ! -f "$WF_PATH" ]; then
+            echo "::error::Cannot find the importer workflow file: $WF_PATH"
+            exit 1
+          fi
+          echo "$WF_PATH" > "$STAGE/workflow-path.txt"
+
+          if [ "$PAT_AVAILABLE" = "true" ]; then
+            # Keep only the importer workflow.
+            cp -p --parents "$WF_PATH" "$STAGE/workflows/"
+          else
+            # GITHUB_TOKEN cannot change anything in .github/workflows,
+            # so keep that whole folder exactly as it is.
+            mkdir -p "$STAGE/workflows/.github"
+            cp -a .github/workflows "$STAGE/workflows/.github/"
+          fi
+
+          # Optional files to keep
+          for f in $PRESERVE_FILES; do
+            if [ -f "$f" ]; then
+              mkdir -p "$STAGE/keep/$(dirname "$f")"
+              cp -p "$f" "$STAGE/keep/$f"
+              echo "Keeping $f"
+            fi
+          done
+
+      # ==================================================
+      # 6. CLEAN REPOSITORY (all except .git)
+      # The importer workflow is restored later.
+      # ==================================================
+      - name: Clean repository
+        if: steps.find.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+
+          find . -mindepth 1 -maxdepth 1 ! -name ".git" -exec rm -rf {} +
+
+          echo "Repository cleaned. Remaining at root:"
+          ls -A
+
+      # ==================================================
+      # 7. EXTRACT ZIP
+      # ==================================================
+      - name: Extract ZIP
+        if: steps.find.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+
+          STAGE="$RUNNER_TEMP/zip-import"
+          EX="$STAGE/extract"
+          mkdir -p "$EX"
+
+          unzip -q "$STAGE/upload.zip" -d "$EX"
+
+          # Remove junk from macOS and any .git folders inside the ZIP
+          rm -rf "$EX/__MACOSX"
+          find "$EX" -name ".git" -prune -exec rm -rf {} +
+
+          # Reject symlinks that point outside the extracted folder
+          EXR="$(realpath "$EX")"
+          while IFS= read -r -d '' link; do
+            target="$(readlink "$link")"
+            case "$target" in
+              /*) resolved="$(realpath -m "$target")" ;;
+              *)  resolved="$(realpath -m "$(dirname "$link")/$target")" ;;
+            esac
+            case "$resolved" in
+              "$EXR"|"$EXR"/*) ;;
+              *)
+                echo "::error::Unsafe symlink in ZIP: $link -> $target"
+                exit 1
+                ;;
+            esac
+          done < <(find "$EX" -type l -print0)
+
+          if [ -z "$(ls -A "$EX")" ]; then
+            echo "::error::ZIP has no project files."
+            exit 1
+          fi
+
+          echo "ZIP extracted."
+
+      # ==================================================
+      # 8 + 9. DETECT PROJECT ROOT
+      # One top-level folder   -> use that folder (flatten)
+      # Files at the ZIP root  -> use the ZIP root
+      # ==================================================
+      - name: Detect project root
+        if: steps.find.outputs.found == 'true'
+        id: root
+        run: |
+          set -euo pipefail
+
+          EX="$RUNNER_TEMP/zip-import/extract"
+          ROOT="$EX"
+
+          mapfile -t TOP < <(find "$EX" -mindepth 1 -maxdepth 1)
+
+          if [ "${#TOP[@]}" -eq 1 ] && [ -d "${TOP[0]}" ] && [ ! -L "${TOP[0]}" ]; then
+            # A lone .github folder is project content, not a wrapper folder.
+            if [ "$(basename "${TOP[0]}")" != ".github" ]; then
+              ROOT="${TOP[0]}"
+              echo "One top-level folder found. It will be flattened."
+            fi
+          fi
+
+          echo "Project root: $ROOT"
+          echo "path=$ROOT" >> "$GITHUB_OUTPUT"
+
+      # ==================================================
+      # IMPORT PROJECT
+      # ==================================================
+      - name: Import project
+        if: steps.find.outputs.found == 'true'
+        env:
+          PROJECT_ROOT: ${{ steps.root.outputs.path }}
+        run: |
+          set -euo pipefail
+
+          EXCLUDES=(--exclude="/.git")
+
+          if [ "$PAT_AVAILABLE" != "true" ]; then
+            # GITHUB_TOKEN cannot push workflow changes, so skip them.
+            EXCLUDES+=(--exclude="/.github/workflows/")
+            echo "::warning::No GH_PAT secret. Workflow files inside the ZIP are skipped."
+          fi
+
+          rsync -a "${EXCLUDES[@]}" "$PROJECT_ROOT/" ./
+
+          echo "Project imported."
+
+      # ==================================================
+      # 10. RESTORE IMPORTER WORKFLOW (and optional kept files)
+      # ==================================================
+      - name: Restore importer workflow
+        if: steps.find.outputs.found == 'true'
+        run: |
+          set -euo pipefail
+
+          STAGE="$RUNNER_TEMP/zip-import"
+
+          cp -a "$STAGE/workflows/.github" ./
+
+          if [ -d "$STAGE/keep" ]; then
+            cp -a "$STAGE/keep/." ./
+          fi
+
+          WF_PATH="$(cat "$STAGE/workflow-path.txt")"
+          if [ ! -f "$WF_PATH" ]; then
+            echo "::error::Importer workflow was not restored. Nothing will be pushed."
+            exit 1
+          fi
+
+          echo "Importer workflow restored: $WF_PATH"
+
+      # ==================================================
+      # 11. DELETE UPLOADED ZIP
+      # ==================================================
+      - name: Delete uploaded ZIP
+        if: steps.find.outputs.found == 'true'
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          set -euo pipefail
+          rm -f "$ZIP"
+          echo "Deleted $ZIP"
+
+      # ==================================================
+      # 12 + 13. COMMIT AND PUSH TO MAIN
+      # Runs only if every step before it passed.
+      # ==================================================
+      - name: Commit and push
+        if: steps.find.outputs.found == 'true'
+        env:
+          ZIP: ${{ steps.find.outputs.zip }}
+        run: |
+          set -euo pipefail
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add -A
+
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+            exit 0
+          fi
+
+          # [skip ci] stops this push from starting the workflow again.
+          git commit -m "Import project from ${ZIP#./} [skip ci]"
+          git push origin HEAD:main
+
+          echo "Import finished and pushed to main."
