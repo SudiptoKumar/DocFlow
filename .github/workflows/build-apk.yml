@@ -4,10 +4,15 @@ on:
   workflow_dispatch:
     inputs:
       create_release:
-        description: "Create a GitHub Release and attach the APK"
-        required: true
-        default: false
+        description: "Also create a GitHub Release and attach the APK"
+        required: false
         type: boolean
+        default: false
+      release_tag:
+        description: "Release tag (used only when create_release is enabled)"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: write
@@ -46,10 +51,10 @@ jobs:
           retention-days: 14
 
       - name: Create GitHub Release
-        if: ${{ inputs.create_release }}
+        if: ${{ inputs.create_release && inputs.release_tag != '' }}
         uses: softprops/action-gh-release@v3
         with:
-          tag_name: manual-${{ github.run_number }}
-          name: DocFlow APK - Build ${{ github.run_number }}
+          tag_name: ${{ inputs.release_tag }}
+          name: DocFlow ${{ inputs.release_tag }}
           files: app/build/outputs/apk/debug/app-debug.apk
-          generate_release_notes: false
+          generate_release_notes: true
