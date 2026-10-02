@@ -1,0 +1,3 @@
+-keep class com.tom_roush.pdfbox.** { *; }
+-keep class org.bouncycastle.** { *; }
+-dontwarn org.bouncycastle.**
