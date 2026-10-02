@@ -16,6 +16,9 @@ import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clip
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -107,6 +110,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
@@ -120,6 +124,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import androidx.webkit.WebSettingsCompat
 import androidx.webkit.WebViewFeature
 import com.sudiptokumar.docflow.ui.theme.DocFlowTheme
+import com.sudiptokumar.docflow.ui.theme.DocFlowColors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.text.SimpleDateFormat
@@ -137,7 +142,44 @@ class MainActivity : ComponentActivity() {
 @Composable
 private fun DocFlowRoot() {
     var dark by rememberSaveable { mutableStateOf(false) }
-    DocFlowTheme(darkTheme = dark) { DocFlowApp(dark = dark, onDarkChange = { dark = it }) }
+    var showSplash by rememberSaveable { mutableStateOf(true) }
+    DocFlowTheme(darkTheme = dark) {
+        if (showSplash) {
+            LaunchedEffect(Unit) { kotlinx.coroutines.delay(1800); showSplash = false }
+            DocFlowSplash()
+        } else {
+            DocFlowApp(dark = dark, onDarkChange = { dark = it })
+        }
+    }
+}
+
+@Composable
+private fun DocFlowSplash() {
+    val green = Color(0xFF00C853)
+    Box(
+        modifier = Modifier.fillMaxSize().background(green),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(Modifier.size(190.dp), contentAlignment = Alignment.Center) {
+            Box(Modifier.size(176.dp).background(
+                Brush.radialGradient(listOf(Color(0x6686EFAC), Color.Transparent)),
+                RoundedCornerShape(100.dp)
+            ))
+            Box(
+                Modifier.size(164.dp)
+                    .background(Brush.linearGradient(listOf(DocFlowColors.Emerald, DocFlowColors.Teal)), RoundedCornerShape(100.dp))
+                    .border(1.dp, Color.White.copy(alpha = 0.16f), RoundedCornerShape(100.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    Icons.Default.Description,
+                    contentDescription = "DocFlow",
+                    tint = Color.White,
+                    modifier = Modifier.size(76.dp)
+                )
+            }
+        }
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -344,32 +386,81 @@ fun DocFlowApp(dark: Boolean, onDarkChange: (Boolean) -> Unit) {
 
 @Composable
 private fun HeroCard(content: String, type: ContentType, dark: Boolean) {
-    Card(modifier = Modifier.fillMaxWidth().padding(12.dp), colors = CardDefaults.cardColors(containerColor = if (dark) Color(0xFF052E2B) else Color(0xFFECFDF5))) {
-        Row(Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
-            Column(Modifier.weight(1f)) { Text("Study Tool", fontSize = 12.sp, color = Color(5,150,105)); Text("DocFlow", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold); Text(if (content.isBlank()) "Write, format, convert" else "${content.lines().size} lines • ${content.length} chars", color = MaterialTheme.colorScheme.onSurfaceVariant) }
-            AssistChip(onClick = {}, label = { Text(if (type == ContentType.HTML) "HTML" else "Markdown") }, leadingIcon = { Icon(Icons.Default.Description, null, Modifier.size(16.dp)) })
+    val shape = RoundedCornerShape(24.dp)
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp, vertical = 10.dp)
+            .clip(shape)
+            .background(
+                Brush.linearGradient(
+                    if (dark) listOf(Color(0xFF061F1C), Color(0xFF0B0F1A), Color(0xFF170B2D))
+                    else listOf(Color(0xFFF0FDF4), Color(0xFFEFF6FF), Color(0xFFF5F3FF))
+                )
+            )
+            .border(1.dp, if (dark) Color.White.copy(alpha = 0.08f) else Color(0xFFE2E8F0), shape)
+    ) {
+        Column(Modifier.padding(18.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    Text("STUDY TOOL", fontSize = 11.sp, fontWeight = FontWeight.Bold, color = DocFlowColors.Green, letterSpacing = 1.sp)
+                    Text("DocFlow", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.ExtraBold, color = MaterialTheme.colorScheme.onSurface)
+                    Text(
+                        if (content.isBlank()) "Write, format, convert" else "${content.lines().size} lines • ${content.length} chars",
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        fontSize = 13.sp
+                    )
+                }
+                Box(
+                    Modifier
+                        .background(DocFlowColors.Green.copy(alpha = if (dark) 0.18f else 0.10f), RoundedCornerShape(14.dp))
+                        .border(1.dp, DocFlowColors.Green.copy(alpha = 0.25f), RoundedCornerShape(14.dp))
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Description, null, Modifier.size(16.dp), tint = DocFlowColors.Green)
+                        Spacer(Modifier.width(6.dp))
+                        Text(if (type == ContentType.HTML) "HTML" else "Markdown", fontWeight = FontWeight.SemiBold, color = DocFlowColors.Green, fontSize = 12.sp)
+                    }
+                }
+            }
+            Spacer(Modifier.height(14.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                listOf(DocFlowColors.Blue to "Edit", DocFlowColors.Purple to "Preview", DocFlowColors.Orange to "Export").forEach { (color, label) ->
+                    Box(Modifier.background(color.copy(alpha = if (dark) 0.14f else 0.08f), RoundedCornerShape(12.dp)).padding(horizontal = 9.dp, vertical = 6.dp)) {
+                        Text(label, color = color, fontSize = 11.sp, fontWeight = FontWeight.SemiBold)
+                    }
+                }
+            }
         }
     }
 }
 
 @Composable
 private fun EditorPane(content: String, onChange: (String) -> Unit, dark: Boolean, modifier: Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
-        BasicTextField(
-            value = content,
-            onValueChange = onChange,
-            modifier = Modifier.fillMaxSize().padding(14.dp).verticalScroll(rememberScrollState()),
-            textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface),
-            decorationBox = { inner -> if (content.isEmpty()) Text("Start writing Markdown…", color = MaterialTheme.colorScheme.onSurfaceVariant); inner() }
-        )
+    val shape = RoundedCornerShape(18.dp)
+    Card(modifier = modifier, shape = shape, colors = CardDefaults.cardColors(containerColor = if (dark) DocFlowColors.DarkEditor else DocFlowColors.LightEditor), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
+        Box(Modifier.fillMaxSize().border(1.dp, if (dark) Color.White.copy(alpha = 0.06f) else Color(0xFFE8E2D0), shape)) {
+            BasicTextField(
+                value = content,
+                onValueChange = onChange,
+                modifier = Modifier.fillMaxSize().padding(16.dp).verticalScroll(rememberScrollState()),
+                textStyle = TextStyle(fontFamily = FontFamily.Monospace, fontSize = 15.sp, color = MaterialTheme.colorScheme.onSurface, lineHeight = 23.sp),
+                decorationBox = { inner ->
+                    if (content.isEmpty()) Text("Start writing Markdown…", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    inner()
+                }
+            )
+        }
     }
 }
 
 @Composable
 private fun PreviewPane(content: String, type: ContentType, modifier: Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)) {
+    val shape = RoundedCornerShape(18.dp)
+    Card(modifier = modifier, shape = shape, colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface), elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)) {
         AndroidView(
-            modifier = Modifier.fillMaxSize(),
+            modifier = Modifier.fillMaxSize().border(1.dp, MaterialTheme.colorScheme.outline, shape),
             factory = { ctx -> WebView(ctx).apply { webViewClient = WebViewClient(); settings.javaScriptEnabled = true; settings.domStorageEnabled = true; loadDataWithBaseURL(null, MarkdownEngine.html(content, type == ContentType.HTML), "text/html", "UTF-8", null) } },
             update = { it.loadDataWithBaseURL(null, MarkdownEngine.html(content, type == ContentType.HTML), "text/html", "UTF-8", null) }
         )
