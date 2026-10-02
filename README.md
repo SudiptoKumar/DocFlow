@@ -86,3 +86,7 @@ DocFlow/
 The supplied CI log failed before compilation because AGP 9.4 already provides built-in Kotlin, while the module also applied `org.jetbrains.kotlin.android`. That duplicate Kotlin extension caused `Cannot add extension with name 'kotlin'`. The project is now migrated to AGP 9+ built-in Kotlin and keeps only the Compose compiler plugin.
 
 The Markdown engine also avoids Android framework-only helpers so its JVM unit tests can execute on GitHub Actions without Android “method not mocked” failures.
+
+
+## Build 1.0.5
+Fixed the Compose `Modifier.clip()` import used by the restored design UI.
